@@ -2,6 +2,7 @@ name: animeganv2
 channels:
   - defaults
   - pytorch
+  - conda-forge
 dependencies:
   - python=3.9
   - pytorch::pytorch=1.10
@@ -9,6 +10,7 @@ dependencies:
   - pycodestyle
   - numpy
   - pandas
+  - conda-forge::opencv
   - pip
   - pip:
     - black
