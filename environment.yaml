@@ -1,0 +1,19 @@
+name: animeganv2
+channels:
+  - defaults
+  - pytorch
+dependencies:
+  - python=3.9
+  - pytorch::pytorch=1.10
+  - cudatoolkit=11.3
+  - pycodestyle
+  - numpy
+  - pandas
+  - pip
+  - pip:
+    - black
+    - pytorch-lightning==1.5
+    - torchmetrics
+    - torchvision
+    - ruyaml
+    - icecream
