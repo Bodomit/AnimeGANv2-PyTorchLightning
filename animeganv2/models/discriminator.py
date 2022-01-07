@@ -40,7 +40,15 @@ class ConvSpectralNorm(nn.Sequential):
 
 
 class Discriminator(nn.Module):
-    def __init__(self, in_ch: int, base_n_ch: int, n_dis: int, spectral_norm: bool):
+    def __init__(
+        self,
+        in_ch: int = 3,
+        base_n_ch: int = 64,
+        n_dis: int = 3,
+        spectral_norm: bool = True,
+    ):
+        super().__init__()
+
         self.in_ch = in_ch
         self.base_n_ch = base_n_ch
         self.n_dis = n_dis

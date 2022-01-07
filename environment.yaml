@@ -19,3 +19,4 @@ dependencies:
     - torchvision
     - ruyaml
     - icecream
+    - rich
