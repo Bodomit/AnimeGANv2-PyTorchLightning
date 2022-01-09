@@ -89,10 +89,19 @@ class AnimeGanDataModule(pl.LightningDataModule):
         ]
 
     def train_dataloader(self):
+        n_cpus = os.cpu_count()
+        assert n_cpus
         return {
-            "real": DataLoader(self.real_dataset, self.batch_size, shuffle=True),
-            "anime": DataLoader(self.anime_dataset, self.batch_size, shuffle=True),
+            "real": DataLoader(
+                self.real_dataset, self.batch_size, shuffle=True, num_workers=n_cpus
+            ),
+            "anime": DataLoader(
+                self.anime_dataset, self.batch_size, shuffle=True, num_workers=n_cpus
+            ),
             "anime_smooth": DataLoader(
-                self.anime_smooth_dataset, self.batch_size, shuffle=True
+                self.anime_smooth_dataset,
+                self.batch_size,
+                shuffle=True,
+                num_workers=n_cpus,
             ),
         }
