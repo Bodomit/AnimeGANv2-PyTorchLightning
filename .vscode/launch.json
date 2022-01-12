@@ -9,6 +9,15 @@
             "type": "python",
             "request": "launch",
             "module": "train"
+        },
+        {
+            "name": "Train: Debug",
+            "type": "python",
+            "request": "launch",
+            "module": "train",
+            "args": [
+                "--debug"
+            ]
         }
     ]
 }

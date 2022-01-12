@@ -6,6 +6,8 @@ import torch
 import torchvision
 from icecream import ic
 from torch import nn
+from torchvision.transforms.functional import to_pil_image
+from torchvision.utils import make_grid
 
 from .losses import DiscriminatorLoss, GeneratorLoss, InitLoss
 from .models import Discriminator, Generator
@@ -55,7 +57,7 @@ class AnimeGanV2(pl.LightningModule):
         # Initilaize the generator on the first epoch.
         if self.current_epoch < 1:
             i_loss = self.init_loss((real, generated))
-            init_opt.zero_grad()
+            init_opt.zero_grad()  # type: ignore
             self.manual_backward(i_loss)
             init_opt.step()
             return
@@ -64,7 +66,7 @@ class AnimeGanV2(pl.LightningModule):
         generated_logit = self.discriminator(generated)
         g_loss = self.generator_loss(real, anime_gray, generated, generated_logit)
 
-        g_opt.zero_grad()
+        g_opt.zero_grad()  # type: ignore
         self.manual_backward(g_loss)
         g_opt.step()
 
@@ -77,9 +79,27 @@ class AnimeGanV2(pl.LightningModule):
             real_logit, anime_gray_logit, generated_logit, smooth_logit
         )
 
-        d_opt.zero_grad()
+        d_opt.zero_grad()  # type: ignore
         self.manual_backward(d_loss)
         d_opt.step()
+
+    def validation_step(self, batch, batch_idx):
+        generated = self.generator(batch)
+        return generated
+
+    def validation_epoch_end(self, generated_batches):
+
+        if isinstance(generated_batches, list):
+            images = torch.concat(generated_batches, 0)
+        elif isinstance(generated_batches, torch.Tensor):
+            images = generated_batches
+        else:
+            raise ValueError
+
+        # Create image grid and log to tensorboard.
+        grid_image = to_pil_image(make_grid(images))
+        tensorboard = self.logger.experiment  # type: ignore
+        tensorboard.add_image("validation", grid_image, self.current_epoch)
 
     def configure_optimizers(self):
         return [

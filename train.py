@@ -1,3 +1,5 @@
+import argparse
+
 import pytorch_lightning as pl
 from pytorch_lightning import callbacks
 
@@ -22,9 +24,14 @@ def main(args):
         multiple_trainloader_mode="max_size_cycle",
         callbacks=[callbacks.ModelSummary(max_depth=2), callbacks.RichProgressBar()],
         detect_anomaly=True,
+        fast_dev_run=args.debug,
     )
     trainer.fit(model, data)
 
 
 if __name__ == "__main__":
-    main(None)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--debug", action="store_true")
+    args = parser.parse_args()
+    main(args)
