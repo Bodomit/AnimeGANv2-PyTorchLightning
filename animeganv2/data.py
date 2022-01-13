@@ -80,7 +80,7 @@ class AnimeGanDataModule(pl.LightningDataModule):
         anime_root: str,
         batch_size: int,
         val_batch_size: int,
-        val_set_ratio: float = 0.1,
+        val_set_ratio: float = 0.05,
     ):
         super().__init__()
         self.save_hyperparameters()
