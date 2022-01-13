@@ -39,6 +39,9 @@ class AnimeGanV2(pl.LightningModule):
 
         vgg19.forward = types.MethodType(forward, vgg19)
 
+        # Don't compute grads for feature model.
+        vgg19.requires_grad_(False)
+
         return vgg19
 
     def training_step(self, batch, batch_idx):
