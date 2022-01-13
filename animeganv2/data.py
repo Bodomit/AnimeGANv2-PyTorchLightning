@@ -79,10 +79,14 @@ class AnimeGanDataModule(pl.LightningDataModule):
         real_root: str,
         anime_root: str,
         batch_size: int,
+        val_batch_size: int,
         val_set_ratio: float = 0.1,
     ):
         super().__init__()
+        self.save_hyperparameters()
+
         self.batch_size = batch_size
+        self.val_batch_size = val_batch_size
         self.val_set_ratio = val_set_ratio
 
         base_transforms = transforms.Compose([transforms.Resize((256, 256))])
@@ -143,5 +147,8 @@ class AnimeGanDataModule(pl.LightningDataModule):
         n_cpus = os.cpu_count()
         assert n_cpus
         return DataLoader(
-            self.real_val_dataset, self.batch_size, shuffle=False, num_workers=n_cpus
+            self.real_val_dataset,
+            self.val_batch_size,
+            shuffle=False,
+            num_workers=n_cpus,
         )

@@ -88,9 +88,15 @@ class AnimeGanV2(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         generated = self.generator(batch)
-        image_pairs = torch.hstack((batch, generated))
+        image_pairs = torch.stack((batch, generated), dim=1)
+        image_pairs = torch.flatten(image_pairs, start_dim=0, end_dim=1)
 
-        return generated
+        # Undo linear standardisation
+        image_pairs = (image_pairs + 1.0) * 127.5
+        image_pairs = torch.clamp(image_pairs, 0, 255)
+        image_pairs = image_pairs.to(torch.uint8)
+
+        return image_pairs
 
     def validation_epoch_end(self, generated_batches):
 
