@@ -14,8 +14,11 @@ from .models import Discriminator, Generator
 
 
 class AnimeGanV2(pl.LightningModule):
-    def __init__(self) -> None:
+    def __init__(self, init_epochs: int) -> None:
         super().__init__()
+        self.save_hyperparameters()
+        self.init_epochs = init_epochs
+
         self.automatic_optimization = False
 
         self.generator = Generator()
@@ -32,8 +35,6 @@ class AnimeGanV2(pl.LightningModule):
         # Monkey-patch to stop forward path through classifier
         def forward(self, x: torch.Tensor) -> torch.Tensor:
             x = self.features(x)
-            x = self.avgpool(x)
-            x = torch.flatten(x, 1)
             return x
 
         vgg19.forward = types.MethodType(forward, vgg19)
@@ -54,8 +55,8 @@ class AnimeGanV2(pl.LightningModule):
 
         generated = self.generator(real)
 
-        # Initilaize the generator on the first epoch.
-        if self.current_epoch < 1:
+        # Initilaize the generator on the first n epochs.
+        if self.current_epoch < self.init_epochs:
             i_loss = self.init_loss((real, generated))
             init_opt.zero_grad()  # type: ignore
             self.manual_backward(i_loss)
@@ -64,19 +65,21 @@ class AnimeGanV2(pl.LightningModule):
 
         # Update the generator.
         generated_logit = self.discriminator(generated)
-        g_loss = self.generator_loss(real, anime_gray, generated, generated_logit)
+        g_loss = self.generator_loss((real, anime_gray, generated, generated_logit))
 
         g_opt.zero_grad()  # type: ignore
         self.manual_backward(g_loss)
         g_opt.step()
 
         # Update the discriminator.
+        generated = self.generator(real)
+        generated_logit = self.discriminator(generated)
         real_logit = self.discriminator(real)
         anime_gray_logit = self.discriminator(anime_gray)
         smooth_logit = self.discriminator(anime_smooth)
 
         d_loss = self.discriminator_loss(
-            real_logit, anime_gray_logit, generated_logit, smooth_logit
+            (real_logit, anime_gray_logit, generated_logit, smooth_logit)
         )
 
         d_opt.zero_grad()  # type: ignore
@@ -85,6 +88,8 @@ class AnimeGanV2(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         generated = self.generator(batch)
+        image_pairs = torch.hstack((batch, generated))
+
         return generated
 
     def validation_epoch_end(self, generated_batches):
@@ -97,7 +102,7 @@ class AnimeGanV2(pl.LightningModule):
             raise ValueError
 
         # Create image grid and log to tensorboard.
-        grid_image = to_pil_image(make_grid(images))
+        grid_image = make_grid(images)
         tensorboard = self.logger.experiment  # type: ignore
         tensorboard.add_image("validation", grid_image, self.current_epoch)
 

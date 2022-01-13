@@ -69,6 +69,7 @@ class Discriminator(nn.Module):
             conv_s2 = ConvSpectralNorm(
                 prev_channels,
                 channels * 2,
+                stride=2,
                 spectral_norm=self.spectral_norm,
             )
 
@@ -90,7 +91,7 @@ class Discriminator(nn.Module):
             spectral_norm=self.spectral_norm,
         )
 
-        self.layer_norm = nn.LayerNorm([channels * 2, 256, 256])
+        self.layer_norm = nn.LayerNorm([channels * 2, 68, 68])
 
         self.D_logit = ConvSpectralNorm(
             channels * 2, 1, spectral_norm=self.spectral_norm
