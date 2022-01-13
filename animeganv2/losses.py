@@ -17,11 +17,11 @@ def content_loss(x1_features: torch.Tensor, x2_features: torch.Tensor) -> torch.
     return F.l1_loss(x1_features, x2_features)
 
 
-def style_loss(style, generated):
+def style_loss(style: torch.Tensor, generated: torch.Tensor):
     return F.l1_loss(gram(style), gram(generated))
 
 
-def colour_loss(real, generated):
+def colour_loss(real: torch.Tensor, generated: torch.Tensor):
     real = rgb_to_ycbcr(real)
     generated = rgb_to_ycbcr(generated)
 
@@ -32,6 +32,24 @@ def colour_loss(real, generated):
     )
 
 
+def l2_loss(x: torch.Tensor):
+    """
+    Matches the equivilent Tensorflow function used in the original AnimeGANv2.
+    https://www.tensorflow.org/api_docs/python/tf/nn/l2_loss
+    """
+    return (x ** 2).sum() / 2
+
+
+def total_variation_loss(generated: torch.Tensor):
+    # https://en.wikipedia.org/wiki/Total_variation_denoising
+    dh = generated[:, :, :-1, :] - generated[:, :, 1:, :]
+    dw = generated[:, :, :, :-1] - generated[:, :, :, 1:]
+    size_dh = float(dh.numel())
+    size_dw = float(dw.numel())
+
+    return l2_loss(dh) / size_dh + l2_loss(dw) / size_dw
+
+
 class GeneratorLoss(nn.Module):
     def __init__(
         self,
@@ -40,6 +58,7 @@ class GeneratorLoss(nn.Module):
         content_weight: float = 1.5,
         style_weight: float = 3.0,
         colour_weight: float = 10,
+        tv_loss_weight: float = 1,
     ) -> None:
         super().__init__()
         self.feature_model = feature_model
@@ -47,6 +66,7 @@ class GeneratorLoss(nn.Module):
         self.content_weight = content_weight
         self.style_weight = style_weight
         self.colour_weight = colour_weight
+        self.tv_loss_weight = tv_loss_weight
 
     def forward(self, input):
         real, gray, generated, generated_logit = input
@@ -58,12 +78,14 @@ class GeneratorLoss(nn.Module):
         con_loss = content_loss(real_features, generated_features)
         sty_loss = style_loss(real_features, gray_features)
         col_loss = colour_loss(real, generated)
+        tv_loss = total_variation_loss(generated)
 
         total_loss = (
             adv_loss * self.adversarial_weight
             + con_loss * self.content_weight
             + sty_loss * self.style_weight
             + col_loss * self.colour_weight
+            + tv_loss * self.tv_loss_weight
         )
 
         return total_loss
@@ -84,6 +106,19 @@ class InitLoss(nn.Module):
 
 
 class DiscriminatorLoss(nn.Module):
+    def __init__(
+        self,
+        real_weight: float = 1.7,
+        fake_weight: float = 1.7,
+        gray_weight: float = 1.7,
+        smooth_weight: float = 1.0,
+    ) -> None:
+        super().__init__()
+        self.real_weight = real_weight
+        self.fake_weight = fake_weight
+        self.gray_weight = gray_weight
+        self.smooth_weight = smooth_weight
+
     def forward(self, input):
         real_logit, gray_logit, generated_logit, smooth_logit = input
         real_loss = torch.mean(torch.square(real_logit - 1.0))
@@ -91,5 +126,10 @@ class DiscriminatorLoss(nn.Module):
         fake_loss = torch.mean(torch.square(generated_logit))
         smooth_loss = torch.mean(torch.square(smooth_logit))
 
-        loss = real_loss + gray_loss + fake_loss + 0.1 * smooth_loss
+        loss = (
+            real_loss * self.real_weight
+            + gray_loss * self.gray_weight
+            + fake_loss * self.fake_weight
+            + smooth_loss * self.smooth_weight
+        )
         return loss
