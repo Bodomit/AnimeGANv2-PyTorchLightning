@@ -131,15 +131,21 @@ class AnimeGanDataModule(pl.LightningDataModule):
                 self.batch_size,
                 shuffle=True,
                 num_workers=n_cpus,
+                drop_last=True,
             ),
             "anime": DataLoader(
-                self.anime_dataset, self.batch_size, shuffle=True, num_workers=n_cpus
+                self.anime_dataset,
+                self.batch_size,
+                shuffle=True,
+                num_workers=n_cpus,
+                drop_last=True,
             ),
             "anime_smooth": DataLoader(
                 self.anime_smooth_dataset,
                 self.batch_size,
                 shuffle=True,
                 num_workers=n_cpus,
+                drop_last=True,
             ),
         }
 
