@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import torch
 import torch.nn.functional as F
 from kornia.color.ycbcr import rgb_to_ycbcr
@@ -50,6 +52,13 @@ def total_variation_loss(generated: torch.Tensor):
     return l2_loss(dh) / size_dh + l2_loss(dw) / size_dw
 
 
+def get_features(feature_model: nn.Module, *tensors: torch.Tensor):
+    assert all([t.shape == tensors[0].shape for t in tensors])
+    stacked_tensors = torch.vstack(tensors)
+    features = feature_model(stacked_tensors)
+    return torch.tensor_split(features, len(tensors), dim=0)
+
+
 class GeneratorLoss(nn.Module):
     def __init__(
         self,
@@ -70,9 +79,9 @@ class GeneratorLoss(nn.Module):
 
     def forward(self, input):
         real, gray, generated, generated_logit = input
-        real_features = self.feature_model(real)
-        gray_features = self.feature_model(gray)
-        generated_features = self.feature_model(generated)
+        real_features, gray_features, generated_features = get_features(
+            self.feature_model, real, gray, generated
+        )
 
         adv_loss = torch.mean(torch.square(generated_logit - 1.0))
         con_loss = content_loss(real_features, generated_features)
@@ -105,10 +114,11 @@ class InitLoss(nn.Module):
         self.feature_model = feature_model
         self.content_weight = content_weight
 
-    def forward(self, input):
+    def forward(self, input: Tuple[torch.Tensor, torch.Tensor]):
         real, generated = input
-        real_features = self.feature_model(real)
-        generated_features = self.feature_model(generated)
+        real_features, generated_features = get_features(
+            self.feature_model, real, generated
+        )
         con_loss = content_loss(real_features, generated_features)
         return con_loss * self.content_weight
 
