@@ -88,7 +88,15 @@ class GeneratorLoss(nn.Module):
             + tv_loss * self.tv_loss_weight
         )
 
-        return total_loss
+        losses = {
+            "g_losses/adv": adv_loss,
+            "g_losses/con": con_loss,
+            "g_losses/sty": sty_loss,
+            "g_losses/col": col_loss,
+            "g_losses/tv": tv_loss,
+        }
+
+        return total_loss, losses
 
 
 class InitLoss(nn.Module):
@@ -132,4 +140,12 @@ class DiscriminatorLoss(nn.Module):
             + fake_loss * self.fake_weight
             + smooth_loss * self.smooth_weight
         )
-        return loss
+
+        losses = {
+            "d_losses/real": real_loss,
+            "d_losses/gray": gray_loss,
+            "d_losses/fake": fake_loss,
+            "d_losses/smooth": smooth_loss,
+        }
+
+        return loss, losses

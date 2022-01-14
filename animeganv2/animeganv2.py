@@ -64,11 +64,17 @@ class AnimeGanV2(pl.LightningModule):
             init_opt.zero_grad()  # type: ignore
             self.manual_backward(i_loss)
             init_opt.step()
+            self.log("i_loss", i_loss)
             return
 
         # Update the generator.
         generated_logit = self.discriminator(generated)
-        g_loss = self.generator_loss((real, anime_gray, generated, generated_logit))
+        g_loss, g_losses = self.generator_loss(
+            (real, anime_gray, generated, generated_logit)
+        )
+
+        self.log("g_loss", g_loss)
+        self.log_dict(g_losses)
 
         g_opt.zero_grad()  # type: ignore
         self.manual_backward(g_loss)
@@ -81,9 +87,12 @@ class AnimeGanV2(pl.LightningModule):
         anime_gray_logit = self.discriminator(anime_gray)
         smooth_logit = self.discriminator(anime_smooth)
 
-        d_loss = self.discriminator_loss(
+        d_loss, d_losses = self.discriminator_loss(
             (real_logit, anime_gray_logit, generated_logit, smooth_logit)
         )
+
+        self.log("d_loss", d_loss)
+        self.log_dict(d_losses)
 
         d_opt.zero_grad()  # type: ignore
         self.manual_backward(d_loss)
