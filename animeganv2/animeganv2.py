@@ -1,12 +1,9 @@
 import types
-from typing import List
 
 import pytorch_lightning as pl
 import torch
 import torchvision
-from icecream import ic
 from torch import nn
-from torchvision.transforms.functional import to_pil_image
 from torchvision.utils import make_grid
 
 from .losses import DiscriminatorLoss, GeneratorLoss, InitLoss
@@ -73,7 +70,7 @@ class AnimeGanV2(pl.LightningModule):
             (real, anime_gray, generated, generated_logit)
         )
 
-        self.log("g_loss", g_loss)
+        self.log("g_loss", g_loss, prog_bar=True)
         self.log_dict(g_losses)
 
         g_opt.zero_grad()  # type: ignore
@@ -91,7 +88,7 @@ class AnimeGanV2(pl.LightningModule):
             (real_logit, anime_gray_logit, generated_logit, smooth_logit)
         )
 
-        self.log("d_loss", d_loss)
+        self.log("d_loss", d_loss, prog_bar=True)
         self.log_dict(d_losses)
 
         d_opt.zero_grad()  # type: ignore

@@ -1,12 +1,25 @@
 import argparse
 import os
-from datetime import timedelta
+from datetime import datetime
 
 import pytorch_lightning as pl
 from pytorch_lightning import callbacks
 
 from animeganv2.animeganv2 import AnimeGanV2
 from animeganv2.data import AnimeGanDataModule
+
+
+def get_checkpoint_callback(output_path: str):
+    checkpoint_dir_path = os.path.join(
+        output_path, "checkpoints", datetime.utcnow().strftime(r"%Y%m%d-%H%M%S")
+    )
+    os.makedirs(checkpoint_dir_path)
+    checkpoint_callback = callbacks.ModelCheckpoint(
+        dirpath=checkpoint_dir_path,
+        filename="checkpoint_{epoch:03d}-{g_loss:.2f}",
+        save_last=True,
+    )
+    return checkpoint_callback
 
 
 def main(args):
@@ -19,13 +32,6 @@ def main(args):
 
     model = AnimeGanV2(args.init_epochs)
 
-    checkpoint = callbacks.ModelCheckpoint(
-        dirpath=os.path.join(args.output_path, "checkpoints"),
-        filename="checkpoint_{epoch:03d}-{g_loss:.d}",
-        save_last=True,
-        train_time_interval=timedelta(hours=6),
-    )
-
     trainer = pl.Trainer(
         default_root_dir=args.output_path,
         max_epochs=101,
@@ -36,7 +42,7 @@ def main(args):
         callbacks=[
             callbacks.ModelSummary(max_depth=2),
             callbacks.RichProgressBar(),
-            checkpoint,
+            get_checkpoint_callback(args.output_path),
         ],
         detect_anomaly=True,
         fast_dev_run=args.debug,
