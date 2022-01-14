@@ -8,7 +8,12 @@
             "name": "Train",
             "type": "python",
             "request": "launch",
-            "module": "train"
+            "module": "train",
+            "args": [
+                "/mnt/d/datasets/AnimeGANDataset/train_photo/",
+                "/mnt/d/datasets/AnimeGANDataset/Shinkai/",
+                "/mnt/d/results/AnimeGAN/debug/Shinkai",
+            ]
         },
         {
             "name": "Train: Debug",
@@ -16,6 +21,9 @@
             "request": "launch",
             "module": "train",
             "args": [
+                "/mnt/d/datasets/AnimeGANDataset/train_photo/",
+                "/mnt/d/datasets/AnimeGANDataset/Shinkai/",
+                "/mnt/d/results/AnimeGAN/debug/Shinkai",
                 "--debug"
             ]
         }
