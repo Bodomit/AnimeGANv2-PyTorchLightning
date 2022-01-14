@@ -40,8 +40,7 @@ def main(args):
         benchmark=True,
         multiple_trainloader_mode="max_size_cycle",
         callbacks=[
-            callbacks.ModelSummary(max_depth=2),
-            callbacks.RichProgressBar(),
+            callbacks.RichModelSummary(max_depth=2),
             get_checkpoint_callback(args.output_path),
         ],
         detect_anomaly=True,
