@@ -3,10 +3,14 @@ import os
 from datetime import datetime
 
 import pytorch_lightning as pl
+import torch.multiprocessing
 from pytorch_lightning import callbacks
 
 from animeganv2.animeganv2 import AnimeGanV2
 from animeganv2.data import AnimeGanDataModule
+
+# Fix for "OSError: Too many open files."
+torch.multiprocessing.set_sharing_strategy("file_system")
 
 
 def get_checkpoint_callback(output_path: str):
@@ -55,8 +59,8 @@ if __name__ == "__main__":
     parser.add_argument("real_input_path", type=str)
     parser.add_argument("style_input_path", type=str)
     parser.add_argument("output_path", type=str)
-    parser.add_argument("--batch-size", "-b", type=int, default=2)
-    parser.add_argument("--val-batch-size", "-vb", type=int, default=2)
+    parser.add_argument("--batch-size", "-b", type=int, default=4)
+    parser.add_argument("--val-batch-size", "-vb", type=int, default=4)
     parser.add_argument("--init-epochs", type=int, default=1)
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()

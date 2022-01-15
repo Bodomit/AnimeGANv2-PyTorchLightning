@@ -7,10 +7,9 @@ from torch import nn
 
 
 def gram(x: torch.Tensor):
-    # TODO Check if the CHW or HWC order matters here.
     shape_x = x.shape
     b = shape_x[0]
-    c = shape_x[3]
+    c = shape_x[1]
     x = torch.reshape(x, [b, -1, c])
     return (torch.transpose(x, 1, 2) @ x) / (x.numel() // b)
 

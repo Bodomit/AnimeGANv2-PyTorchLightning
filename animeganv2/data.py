@@ -9,6 +9,14 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from torchvision.datasets import VisionDataset
 
+MAX_WORKERS = 16
+
+
+def get_n_workers():
+    n_cpu = os.cpu_count()
+    assert n_cpu
+    return min(n_cpu, MAX_WORKERS)
+
 
 class BasicImageDataset(Dataset):
     def __init__(self, paths: Set[str], transform: Optional[Callable] = None) -> None:
@@ -42,8 +50,7 @@ class UnlabledImageDataset(BasicImageDataset):
         self.image_paths = self.read_image_paths(root)
 
         super().__init__(
-            self.image_paths,
-            transform=transform,
+            self.image_paths, transform=transform,
         )
 
     def read_image_paths(self, root: str) -> Set[str]:
@@ -123,28 +130,26 @@ class AnimeGanDataModule(pl.LightningDataModule):
         return train_set_paths, val_set_paths
 
     def train_dataloader(self):
-        n_cpus = os.cpu_count()
-        assert n_cpus
         return {
             "real": DataLoader(
                 self.real_train_dataset,
                 self.batch_size,
                 shuffle=True,
-                num_workers=n_cpus,
+                num_workers=get_n_workers(),
                 drop_last=True,
             ),
             "anime": DataLoader(
                 self.anime_dataset,
                 self.batch_size,
                 shuffle=True,
-                num_workers=n_cpus,
+                num_workers=get_n_workers(),
                 drop_last=True,
             ),
             "anime_smooth": DataLoader(
                 self.anime_smooth_dataset,
                 self.batch_size,
                 shuffle=True,
-                num_workers=n_cpus,
+                num_workers=get_n_workers(),
                 drop_last=True,
             ),
         }
@@ -156,5 +161,5 @@ class AnimeGanDataModule(pl.LightningDataModule):
             self.real_val_dataset,
             self.val_batch_size,
             shuffle=False,
-            num_workers=n_cpus,
+            num_workers=get_n_workers(),
         )
