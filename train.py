@@ -48,6 +48,7 @@ def main(args):
             get_checkpoint_callback(args.output_path),
         ],
         detect_anomaly=True,
+        resume_from_checkpoint=args.resume_from_checkpoint,
         fast_dev_run=args.debug,
     )
     trainer.fit(model, data)
@@ -62,6 +63,7 @@ if __name__ == "__main__":
     parser.add_argument("--batch-size", "-b", type=int, default=4)
     parser.add_argument("--val-batch-size", "-vb", type=int, default=4)
     parser.add_argument("--init-epochs", type=int, default=1)
+    parser.add_argument("--resume-from-checkpoint", type=str, default=None)
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
 
