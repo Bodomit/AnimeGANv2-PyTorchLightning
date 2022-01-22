@@ -48,10 +48,9 @@ def main(args):
             get_checkpoint_callback(args.output_path),
         ],
         detect_anomaly=True,
-        resume_from_checkpoint=args.resume_from_checkpoint,
         fast_dev_run=args.debug,
     )
-    trainer.fit(model, data)
+    trainer.fit(model, data, ckpt_path=args.resume_from_checkpoint)
 
 
 if __name__ == "__main__":
